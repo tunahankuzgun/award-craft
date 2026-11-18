@@ -1,0 +1,92 @@
+/*
+ * scroll-reveals.css: CSS-only reveals tied to scroll position.
+ *
+ * Job in a design: elements settle into place as they enter the viewport, so the
+ * page feels paced by the reader's scroll rather than by a timer.
+ *
+ * Usage: <h2 class="reveal-fade">...</h2>  or  <figure class="reveal-clip">...</figure>
+ *
+ * Adapt: change the distance, the clip inset, or animation-range. Keep the range
+ * short ("entry 0% cover 35%") so the reveal completes while the element is still
+ * in view. The timing function is linear on purpose: scroll progress already
+ * sets the pace, and linear maps scroll position 1:1 onto the animation. An ease
+ * here would add a second, hidden curve on top of the scroll. Control pacing
+ * with animation-range instead.
+ *
+ * Browser support: scroll-driven animations (animation-timeline: view()) in
+ * Chrome/Edge 115+, Safari 26+, Firefox 159+. Elsewhere the rules below are
+ * skipped and the content is simply visible.
+ *
+ * Accessibility: the hidden start state is only applied when motion is allowed
+ * and the browser supports the feature. Content stays in the DOM and in the
+ * accessibility tree at all times. Print always shows content.
+ *
+ * DESIGN.md tokens: none. Scroll timelines take their pace from scroll position,
+ * not from --dur-reveal or --ease-out-expo.
+ */
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reveal-clip {
+  from {
+    clip-path: inset(12% 12% 12% 12%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  /* System allows motion, and the visitor has not opted out. */
+  @media (prefers-reduced-motion: no-preference) {
+    html:not([data-motion="reduce"]) .reveal-fade {
+      /* The shorthand resets animation-timeline to auto, so it must come first. */
+      animation: reveal-fade linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+
+    html:not([data-motion="reduce"]) .reveal-clip {
+      animation: reveal-clip linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+  }
+
+  /* Visitor explicitly chose full motion, overriding a reduced system setting. */
+  html[data-motion="full"] .reveal-fade {
+    animation: reveal-fade linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+
+  html[data-motion="full"] .reveal-clip {
+    animation: reveal-clip linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+}
+
+/*
+ * Print always shows content. The reveal rules above are more specific than a
+ * plain `.reveal-fade` selector, so this rule uses !important to win in print.
+ * Without a running animation, the element sits at its unanimated (visible) state.
+ */
+@media print {
+  .reveal-fade,
+  .reveal-clip {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}

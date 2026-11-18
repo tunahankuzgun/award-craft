@@ -1,0 +1,86 @@
+/*
+ * marquee.css: a strip of text or logos, static by default.
+ *
+ * Job in a design: a quiet line that signals "more here" without demanding the eye.
+ *
+ * Three states, decided by marquee.js and the motion setting:
+ *   1. No JS, or reduced motion: a STATIC, horizontally scrollable line. Nothing
+ *      moves, the duplicate copy is hidden, and the region is keyboard-focusable.
+ *   2. JS and motion allowed (initMarquee sets data-animated): the track moves,
+ *      driven by a JS ticker. The duplicate copy and the pause button appear.
+ *   3. Paused (data-paused): the same as state 2 but holding still.
+ *
+ * Movement is JS-only on purpose. Autoplay without a working pause control fails
+ * WCAG 2.2.2, so the CSS keyframe path was removed; one mechanism owns pause.
+ *
+ * Structure (see marquee.js for the markup):
+ *   <section class="marquee" tabindex="0" role="region" aria-label="...">
+ *     <div class="marquee__track">
+ *       <ul class="marquee__group">...</ul>
+ *       <ul class="marquee__group" data-marquee-clone aria-hidden="true" inert hidden>...</ul>
+ *     </div>
+ *     <button class="marquee__toggle" type="button" data-marquee-toggle hidden>Pause marquee</button>
+ *   </section>
+ *
+ * Adapt: the gap and padding use --space-6 and --space-3. The speed is set in JS.
+ *
+ * Accessibility: the static default keeps all content reachable. The region takes
+ * keyboard focus so arrow keys and scrolling work. The clone is hidden and inert,
+ * so its items are neither read twice nor focusable.
+ *
+ * DESIGN.md tokens: --space-3, --space-6 (spacing), --step-1 (text),
+ * --step--1 and --track-label (toggle).
+ */
+
+.marquee {
+  position: relative;
+  overflow-x: auto; /* static default: a scrollable line */
+  overscroll-behavior-x: contain;
+}
+
+.marquee__track {
+  display: flex;
+  width: max-content;
+}
+
+.marquee__group {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-6);
+  padding-inline: 0 var(--space-6); /* end padding equals the gap, so copies join evenly */
+  margin: 0;
+  padding-block: var(--space-3);
+  list-style: none;
+  font-size: var(--step-1);
+  white-space: nowrap;
+}
+
+/* The author's display rule above would override the UA hidden style; restore it. */
+.marquee__group[hidden],
+.marquee__toggle[hidden] {
+  display: none;
+}
+
+/* JS has taken over: keep the track inside the frame while it moves. */
+.marquee[data-animated] {
+  overflow: hidden;
+}
+
+.marquee__toggle {
+  margin-block-start: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-line);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--step--1);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* The toggle's visible label switches between "Pause marquee" and "Play marquee";
+ * it carries the state, so it has no aria-pressed. */
+.marquee__toggle:focus-visible {
+  border-color: var(--color-focus);
+}

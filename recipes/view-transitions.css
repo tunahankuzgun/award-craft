@@ -1,0 +1,78 @@
+/*
+ * view-transitions.css: page changes that read as one movement, not a flash.
+ *
+ * Job in a design: a shared image or title travels from the list to the detail
+ * page while the rest crossfades. It makes navigation feel continuous.
+ *
+ * Browser support (progressive enhancement, nothing breaks without it):
+ *   - Cross-document @view-transition: Chrome/Edge 126+, Safari 18.2+. Firefox: not
+ *     supported. Unsupported browsers ignore the rule and navigate normally.
+ *   - Same-document transitions (view-transitions.js) use document.startViewTransition:
+ *     Chrome 111+, Safari 18+, Firefox 144+. The JS falls back to a plain update.
+ *
+ * Adapt: give the shared element a unique view-transition-name on each page. Two
+ * visible elements must never share a name. Tune the keyframes and use the
+ * --dur-scene and --ease-in-out-quint tokens.
+ *
+ * Accessibility: the animation runs only when motion is allowed. Under reduced
+ * motion, the transition duration drops to 1ms, so the change is effectively instant.
+ *
+ * DESIGN.md tokens: --dur-scene, --ease-in-out-quint.
+ */
+
+/* Cross-document transitions for same-origin navigations. */
+@view-transition {
+  navigation: auto;
+}
+
+/* Example shared element: put this class on the hero image on both pages. */
+.hero-media {
+  view-transition-name: hero-media;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-1.5%);
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduce"])::view-transition-old(root) {
+    animation: vt-out var(--dur-scene) var(--ease-in-out-quint) both;
+  }
+
+  :root:not([data-motion="reduce"])::view-transition-new(root) {
+    animation: vt-in var(--dur-scene) var(--ease-in-out-quint) both;
+  }
+}
+
+:root[data-motion="full"]::view-transition-old(root) {
+  animation: vt-out var(--dur-scene) var(--ease-in-out-quint) both;
+}
+
+:root[data-motion="full"]::view-transition-new(root) {
+  animation: vt-in var(--dur-scene) var(--ease-in-out-quint) both;
+}
+
+/* Reduced motion: the browser's default crossfade is cut to 1ms. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"])::view-transition-group(*),
+  :root:not([data-motion="full"])::view-transition-old(*),
+  :root:not([data-motion="full"])::view-transition-new(*) {
+    animation-duration: 1ms;
+  }
+}
+
+:root[data-motion="reduce"]::view-transition-group(*),
+:root[data-motion="reduce"]::view-transition-old(*),
+:root[data-motion="reduce"]::view-transition-new(*) {
+  animation-duration: 1ms;
+}
